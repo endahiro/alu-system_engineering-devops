@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Installs and configures HAProxy to load balance between two web servers
+
+# Update package list and install haproxy
+apt-get update -y
+apt-get install -y haproxy
+
+# Ensure HAProxy is enabled
+sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
+
+# Configure HAProxy
+cat << 'EOF' > /etc/haproxy/haproxy.cfg
+global
+    log /dev/log    local0
+    log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+
+defaults
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    timeout connect 5000
+    timeout client  50000
+    timeout server  50000
+    option  redispatch
+    retries 3
+
+frontend http-in
+    bind *:80
+    default_backend webservers
+
+backend webservers
+    balance roundrobin
+    server web-01 54.82.254.54:80 check
+    server web-02 44.202.63.206:80 check
+EOF
+
+# Restart HAProxy using init script
+service haproxy restart
+
