@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Installs and configures HAProxy to load balance between two web servers
 
+set -e
+
 apt-get update -y
 apt-get install -y haproxy
 
